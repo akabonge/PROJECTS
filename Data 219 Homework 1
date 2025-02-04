@@ -1,0 +1,312 @@
+import numpy as np
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import pandas as pd
+import scipy.stats as stats
+# Load the Excel file
+the_excel_file_in_its_glory = pd.ExcelFile("Attribute DataSet.xlsx")
+# Load the first sheet into a DataFrame
+dr = the_excel_file_in_its_glory.parse(the_excel_file_in_its_glory.sheet_names[0])
+print(the_excel_file_in_its_glory.sheet_names)
+dr.head()
+print(dr.columns)
+dr = dr[['Style', 'Rating', 'Price', 'SleeveLength', 'Season']]
+print(dr.columns)
+dr['Style'].value_counts()
+dr['Price'].value_counts()
+dr.loc[:, 'Style'] = dr['Style'].str.lower()
+dr.loc[dr.SleeveLength == 'half', 'SleeveLength'] = 'half sleeve'
+dr.loc[dr.Style.isin(['ol', 'fashion']), 'Style'] = 'old fashion'
+dr.loc[dr.SleeveLength == 'half', 'SleeveLength'] = 'half sleeve'
+dr.loc[:, 'SleeveLength'] = dr['SleeveLength'].str.lower()
+dr.loc[dr.SleeveLength=='threequater','SleeveLength'] = "threequarter"
+dr.loc[dr.Price == 'very-high', 'Price'] = 'high'
+dr.loc[dr.Price == 'average', 'Price'] = 'medium'
+dr.loc[:, 'Price'] = dr['Price'].str.lower()
+dr.loc[dr.Season == 'automn', 'Season'] = 'autumn'
+dr.loc[dr.SleeveLength == 'urndowncollor', 'SleeveLength'] = 'turndown collar'
+dr.loc[:, 'Season'] = dr['Season'].str.lower()
+dr.loc[dr.SleeveLength == 'sleveless', 'SleeveLength'] = 'sleeveless'
+dr.loc[dr.SleeveLength == 'turndowncollor', 'SleeveLength'] = 'turndown collar'
+dr.loc[dr.SleeveLength == 'halfsleeve', 'SleeveLength'] = 'half sleeve'
+dr.loc[dr.SleeveLength == 'capsleeves', 'SleeveLength'] = 'cap sleeves'
+dr.loc[dr.SleeveLength == 'cap-sleeves', 'SleeveLength'] = 'cap sleeves'
+dr.loc[dr.SleeveLength == 'sleeevless', 'SleeveLength'] = 'sleeveless'
+dr.loc[dr.SleeveLength == 'sleevless', 'SleeveLength'] = 'sleeveless'
+dr.loc[dr.SleeveLength=='thressqatar','SleeveLength'] = "threequarter"
+dr.loc[:, 'Style'] = dr['Style'].str.lower()
+print("Price:\n", dr['Price'].value_counts(), "\n")
+print("Style:\n", dr['Style'].value_counts(), "\n")
+print("SleeveLength:\n", dr['SleeveLength'].value_counts(), "\n")
+print("Season:\n", dr['Season'].value_counts(), "\n")
+dr.loc[dr.Season == 'automn', 'Season'] = 'autumn'
+print("Season:\n", dr['Season'].value_counts(), "\n")
+dr.loc[dr.Price == 'average', 'Price'] = 'medium'
+print("Price:\n", dr['Price'].value_counts(), "\n")
+top_styles = dr['Style'].value_counts().nlargest(10)
+top_styles.plot(kind='bar', color='skyblue', edgecolor='black')
+plt.xlabel("Dress Style")
+plt.ylabel("Frequency")
+top_styles.plot(kind='bar', color='skyblue', edgecolor='black')
+top_styles.plot(kind='bar', color='skyblue', edgecolor='black', figsize=(10,5), title="Top 10 Most Common Dress Styles", xlabel="Dress Style", ylabel="Frequency", rot=45)
+season_style_table = pd.crosstab(dr['Style'], dr['Season'], margins=True)
+season_style_percent = season_style_table / season_style_table.loc['All', 'All'] * 100
+season_style_percent = season_style_percent.round(2)
+print(season_style_table)
+print(season_style_percent)
+season_style_table = pd.crosstab(dr['Style'], dr['Season'], margins=True)
+season_style_percent_by_season = season_style_table.div(season_style_table.loc['All'], axis=1) * 100
+season_style_percent_by_season = season_style_percent_by_season.round(2)
+print(season_style_percent_by_season)
+print(season_style_table)
+# Create a contingency table for SleeveLength and Season
+sleeve_season_table = pd.crosstab(dr['SleeveLength'], dr['Season'])
+
+# Create the heatmap
+plt.figure(figsize=(10, 6))
+sns.heatmap(sleeve_season_table, cmap="Blues", annot=True, fmt="d")
+
+# Add labels and title
+plt.xlabel("Season")
+plt.ylabel("Sleeve Length")
+plt.title("Popularity of Sleeve Lengths Across Seasons")
+
+# Show the plot
+plt.show()
+
+# Create a boxplot to show Rating distribution across different Price categories
+plt.figure(figsize=(8, 5))
+sns.boxplot(x=dr["Price"], y=dr["Rating"], order=["low", "medium", "high"], palette="coolwarm")
+
+# Labels and title
+plt.xlabel("Price Category")
+plt.ylabel("Rating")
+plt.title("Distribution of Dress Ratings by Price Category")
+
+# Show the plot
+plt.show()
+
+dr.boxplot(column="Rating", by="Price", notch=True)  
+plt.title("Boxplot of Dress Ratings by Price Category")  
+plt.suptitle("")  # Removes automatic Pandas-generated title  
+plt.xlabel("Price Category")  
+plt.ylabel("Rating")  
+plt.show()
+
+import scipy.stats as stats
+
+# Group ratings by price category
+high_ratings = dr[dr['Price'] == 'high']['Rating']
+medium_ratings = dr[dr['Price'] == 'medium']['Rating']
+low_ratings = dr[dr['Price'] == 'low']['Rating']
+
+# Perform independent t-tests
+t_stat1, p_value1 = stats.ttest_ind(high_ratings, low_ratings, equal_var=False)
+t_stat2, p_value2 = stats.ttest_ind(medium_ratings, low_ratings, equal_var=False)
+t_stat3, p_value3 = stats.ttest_ind(high_ratings, medium_ratings, equal_var=False)
+
+# Print results
+print(f"T-test (High vs Low): T-statistic = {t_stat1:.3f}, p-value = {p_value1:.3f}")
+print(f"T-test (Medium vs Low): T-statistic = {t_stat2:.3f}, p-value = {p_value2:.3f}")
+print(f"T-test (High vs Medium): T-statistic = {t_stat3:.3f}, p-value = {p_value3:.3f}")
+
+# Interpretation
+alpha = 0.05
+if p_value1 < alpha:
+    print("Significant difference in ratings between High and Low price categories.")
+else:
+    print("No significant difference in ratings between High and Low price categories.")
+
+if p_value2 < alpha:
+    print("Significant difference in ratings between Medium and Low price categories.")
+else:
+    print("No significant difference in ratings between Medium and Low price categories.")
+
+if p_value3 < alpha:
+    print("Significant difference in ratings between High and Medium price categories.")
+else:
+    print("No significant difference in ratings between High and Medium price categories.")
+
+import pandas as pd
+
+# Read the CSV files into DataFrames and set 'identifier' as the index
+pok_spc = pd.read_csv('pokemon_species.csv', index_col='identifier')
+pok = pd.read_csv('pokemon.csv', index_col='identifier')
+
+# Display the first few rows to confirm it loaded correctly
+print(pok_spc.head())
+print(pok.head())
+pok_spc.columns
+pok_spc.head()
+pok.columns
+pok.head()
+
+pok_spc = pok_spc[['hatch_counter', 'capture_rate', 'is_baby']]
+pok_spc['hatch_counter'].plot(kind="hist", bins=9)
+
+# Labeling
+plt.xlabel('Hatch Counter')
+plt.ylabel('Frequency')
+plt.title('Hatch Counter')
+
+# Show plot
+plt.show()
+
+# Step 6: Create a histogram for 'capture_rate' (you can adjust the bin size as needed)
+pok_spc['capture_rate'].plot(kind="hist", bins=10)  # Adjust bin size as needed
+plt.xlabel('Capture Rate')
+plt.ylabel('Frequency')
+plt.title('Capture Rate')
+plt.show()  # This will display the histogram for capture rate
+
+sns.scatterplot(data=pok_spc, x='hatch_counter', y='capture_rate', hue='is_baby', palette='Set1')
+
+# Step 4: Add labels and title
+plt.xlabel('Hatch Counter')
+plt.ylabel('Capture Rate')
+plt.title('Scatter Plot of Hatch Counter vs Capture Rate')
+plt.legend(title='Is Baby', loc='upper right')
+
+# Step 5: Show the plot
+plt.show()
+
+# Restrict the pok DataFrame to relevant columns: 'height', 'weight', 'base_experience', and 'order'
+pok = pok[['height', 'weight', 'base_experience', 'order']]
+
+# Display the first few rows to confirm the restriction
+print(pok.head())
+sns.pairplot(pok)
+plt.suptitle('Scatter Plot Matrix of Pokémon Characteristics', size=16, y=1.02)  # Adjusted y for spacing
+
+# Step 3: Show the plot
+plt.show()
+
+import pandas as pd
+
+# Load the dataset (assuming it's in a CSV file for this example)
+data = pd.read_csv("data.csv")  # Replace with your file path
+
+# Keep only the relevant columns
+data_filtered = data[['score', 'elapse', 'gender', 'age']]
+
+# Remove rows where time taken (elapse) > 1200 seconds (20 minutes) or age > 100
+cleaned_data = data_filtered[(data_filtered['elapse'] <= 1200) & (data_filtered['age'] <= 100) & (data_filtered['age'] >= 14)]
+
+# Display the first few rows to verify
+print(cleaned_data.head())
+
+# Display the first few rows to verify
+print(data_filtered.head())
+# Remove rows where gender is 0 (indicating refusal to provide gender)
+cleaned_data = cleaned_data[cleaned_data['gender'] != 0]
+
+# Display the first few rows to verify
+print(cleaned_data.head())
+print(cleaned_data)
+# Calculate the median age
+median_age = cleaned_data['age'].median()
+
+# Create a new column 'age_group' based on the median age
+cleaned_data['age_group'] = cleaned_data['age'].apply(lambda x: 'old' if x > median_age else 'young')
+
+# Display the first few rows to verify
+print(cleaned_data[['age', 'age_group']].head())
+
+
+
+# Create scatter plot with alpha transparency
+plt.figure(figsize=(8, 5))
+sns.scatterplot(data=cleaned_data, x='age', y='score', alpha=0.3)
+plt.xlabel('Age')
+plt.ylabel('Narcissism Score')
+plt.title('Relationship Between Age and Narcissism')
+plt.grid(True)
+plt.show()
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Define age groups based on median age
+median_age = cleaned_data['age'].median()
+cleaned_data['age_group'] = cleaned_data['age'].apply(lambda x: 'Older' if x > median_age else 'Younger')
+
+# Create FacetGrid with two rows (age groups) and three columns (genders)
+facet = sns.FacetGrid(cleaned_data, row='age_group', col='gender', margin_titles=True, height=4)
+
+# Map scatter plot onto each subplot
+facet.map(plt.scatter, 'score', 'elapse', alpha=0.3)
+
+# Set labels and titles
+facet.set_axis_labels("Narcissism Score", "Survey Completion Time (seconds)")
+facet.fig.suptitle("Narcissism vs. Survey Completion Time by Age Group and Gender", fontsize=14, y=1.03)
+
+# Show the plot
+plt.show()
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Define age groups based on median age
+median_age = cleaned_data['age'].median()
+cleaned_data['age_group'] = cleaned_data['age'].apply(lambda x: 'Older' if x > median_age else 'Younger')
+
+# Create FacetGrid with two rows (age groups) and three columns (genders)
+facet = sns.FacetGrid(cleaned_data, row='age_group', col='gender', margin_titles=True, height=4)
+
+# Map scatter plot onto each subplot
+facet.map(plt.scatter, 'score', 'elapse', alpha=0.3)
+
+# Set labels and adjust titles
+facet.set_axis_labels("Narcissism Score", "Survey Completion Time (seconds)")
+facet.set_titles(row_template="{row_name} Age Group", col_template="{col_name}")
+
+# Add an overall title
+facet.fig.suptitle("Narcissism vs. Survey Completion Time by Age Group and Gender", fontsize=14, y=1.03)
+
+# Show the plot
+plt.show()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import pearsonr
+
+# Load dataset (assuming cleaned_data is already prepared)
+# cleaned_data = pd.read_csv('your_data.csv')  # Uncomment if loading from a file
+
+# Create an age group column (younger vs. older)
+cleaned_data['age_group'] = cleaned_data['age'].apply(lambda x: 'Younger' if x < cleaned_data['age'].median() else 'Older')
+
+# Create a FacetGrid for scatter plots
+facet = sns.FacetGrid(cleaned_data, col="gender", row="age_group", margin_titles=True, height=4)
+facet.map_dataframe(sns.scatterplot, x="score", y="elapse", alpha=0.3)
+facet.set_axis_labels("Narcissism Score", "Survey Completion Time (seconds)")
+facet.fig.suptitle("Narcissism vs. Survey Completion Time by Age Group and Gender", y=1.05)
+plt.show()
+
+# Correlation analysis
+correlation_results = {}
+
+for age_group in cleaned_data['age_group'].unique():
+    for gender in cleaned_data['gender'].unique():
+        subset = cleaned_data[(cleaned_data['age_group'] == age_group) & (cleaned_data['gender'] == gender)]
+        
+        if len(subset) > 10:  # Ensuring sufficient sample size
+            corr, p_value = pearsonr(subset['score'], subset['elapse'])
+            correlation_results[(age_group, gender)] = (corr, p_value)
+
+# Print correlation results
+for key, value in correlation_results.items():
+    print(f"Age Group: {key[0]}, Gender: {key[1]} -> Correlation: {value[0]:.3f}, p-value: {value[1]:.3f}")
+    
+
+
+
+
+
+
+
+
+
+
+
