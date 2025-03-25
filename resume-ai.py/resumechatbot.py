@@ -4,48 +4,64 @@ import PyPDF2
 from io import StringIO
 import datetime
 from dotenv import load_dotenv
-from openai import OpenAI
-import streamlit as st
+import os
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# === Load API key from Streamlit Secrets or .env ===
+load_dotenv()
+api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
-
-# ✅ Your fine-tuned model ID
+# === Fine-tuned Resume AI model ===
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
 
-# === Streamlit UI ===
+# === Page UI ===
+st.set_page_config(page_title="Resume & Career AI", page_icon="💼")
 st.title("💼 Resume & Career AI Chatbot")
-st.caption("Ask anything about job search, resumes, LinkedIn, interviews, or career growth.")
+st.caption("Get personalized help with your resume, cover letters, job search, interviews, or career growth.")
 
-# === Optional: Upload Resume PDF ===
+# === Upload Resume/Cover Letter PDF ===
+uploaded_file = st.file_uploader("📄 Upload your resume or cover letter (PDF)", type=["pdf"])
 pdf_text = ""
-uploaded_file = st.file_uploader("📄 Upload your resume (PDF)", type=["pdf"])
-if uploaded_file:
-    reader = PyPDF2.PdfReader(uploaded_file)
-    for page in reader.pages:
-        pdf_text += page.extract_text()
-    st.success("✅ Resume uploaded and processed.")
 
-# === Start Session ===
+if uploaded_file:
+    try:
+        reader = PyPDF2.PdfReader(uploaded_file)
+        pdf_text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        st.success("✅ File uploaded and processed.")
+
+        # Display raw text preview
+        with st.expander("🔍 Preview Extracted Text"):
+            st.text_area("📄 Extracted Content", pdf_text, height=250)
+
+    except Exception as e:
+        st.error(f"❌ Failed to extract PDF text: {e}")
+
+# === Initialize session messages ===
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "system",
             "content": (
-                "You are a professional and friendly AI Career Coach. "
-                "Help users with resumes, job applications, interviews, LinkedIn, and career growth. "
-                "Keep all replies focused on career topics."
+                "You are a highly specialized AI Career Advisor. You ONLY provide guidance on resume writing, job applications, cover letters, interview preparation, LinkedIn profiles, and career development. "
+                "You do NOT answer questions outside of career-related topics. If someone asks about food, entertainment, or other non-career topics, gently redirect them back to professional guidance. "
+                "Always be warm, supportive, and practical in tone — like a real career coach."
             )
         }
     ]
-    if pdf_text:
-        st.session_state.messages.append({"role": "user", "content": f"Here is my resume:\n\n{pdf_text}\n\nGive me feedback."})
 
-# === Chat input ===
+    if pdf_text:
+        st.session_state.messages.append({
+            "role": "user",
+            "content": f"Please analyze the following document and provide helpful feedback:\n\n{pdf_text}"
+        })
+
+# === Chat Input ===
 user_input = st.chat_input("Ask your career question here...")
+
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.spinner("Thinking..."):
+
+    with st.spinner("💬 Resume AI is thinking..."):
         try:
             response = client.chat.completions.create(
                 model=MODEL_ID,
@@ -55,17 +71,21 @@ if user_input:
             )
             reply = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": reply})
+
         except Exception as e:
             st.error(f"❌ API Error: {e}")
 
-# === Show chat history ===
-for msg in st.session_state.messages[1:]:
+# === Main Chat Window ===
+for msg in st.session_state.messages[1:]:  # Skip system message
     if msg["role"] == "user":
         st.chat_message("user").write(msg["content"])
     elif msg["role"] == "assistant":
         st.chat_message("assistant").write(msg["content"])
 
-# === Export chat ===
-if st.button("💾 Download chat log"):
-    chat_log = "\n\n".join(f"{m['role'].capitalize()}: {m['content']}" for m in st.session_state.messages[1:])
-    st.download_button("Download .txt", data=chat_log, file_name=f"career_chat_{datetime.date.today()}.txt", mime="text/plain")
+# === 📚 Conversation History Sidebar ===
+with st.sidebar:
+    st.markdown("### 📚 Conversation History")
+    for i, msg in enumerate(st.session_state.messages[1:]):  # Skip system message
+        role = "🧑 You" if msg["role"] == "user" else "🤖 Resume AI"
+        preview = msg["content"][:120] + ("..." if len(msg["content"]) > 120 else "")
+        st.write(f"**{role}:** {preview}")
