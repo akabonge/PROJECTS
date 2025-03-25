@@ -8,6 +8,8 @@ from io import StringIO
 import datetime
 
 client = OpenAI(api_key="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")
+MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
+
 def check_password():
     def password_entered():
         if st.session_state["password"] == st.secrets.get("password", "careersecret"):
