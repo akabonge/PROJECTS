@@ -7,7 +7,7 @@ import PyPDF2
 from io import StringIO
 import datetime
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+client = OpenAI(api_key=st.Secrets["OPENAI_API_KEY"])
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
 
 def check_password():
