@@ -3,6 +3,7 @@
 import streamlit as st
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 import PyPDF2
 from io import StringIO
 import datetime
