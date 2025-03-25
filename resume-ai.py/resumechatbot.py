@@ -5,7 +5,7 @@ from io import StringIO
 import datetime
 
 # ✅ HARD-CODED API KEY (for testing)
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="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")
 
 # ✅ Your fine-tuned model ID
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
