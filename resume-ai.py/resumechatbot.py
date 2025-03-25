@@ -3,9 +3,10 @@ from openai import OpenAI
 import PyPDF2
 from io import StringIO
 import datetime
+from dotenv import load_dotenv
 
-# ✅ HARD-CODED API KEY (for testing)
-client = OpenAI(api_key="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")
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ✅ Your fine-tuned model ID
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
