@@ -42,9 +42,11 @@ if "messages" not in st.session_state:
         {
             "role": "system",
             "content": (
-                "You are a highly specialized AI Career Advisor. You ONLY provide guidance on resume writing, job applications, cover letters, interview preparation, LinkedIn profiles, and career development. "
-                "You do NOT answer questions outside of career-related topics. If someone asks about food, entertainment, or other non-career topics, gently redirect them back to professional guidance. "
-                "Always be warm, supportive, and practical in tone — like a real career coach."
+                "You are Resume AI, a strictly career-focused assistant. You ONLY respond to questions related to resumes, cover letters, job searching, interviews, career development, LinkedIn optimization, and professional growth. "
+                "If a user asks a question that is not career-related (like about food, entertainment, politics, personal advice, etc.), politely redirect them and say: "
+                "'I'm here to help with career topics only. Let's talk about your resume, cover letter, or career goals!' "
+                "NEVER attempt to answer off-topic questions — always refocus the user back to career-related help. "
+                "You should sound warm, helpful, and professional at all times."
             )
         }
     ]
@@ -82,10 +84,10 @@ for msg in st.session_state.messages[1:]:  # Skip system message
     elif msg["role"] == "assistant":
         st.chat_message("assistant").write(msg["content"])
 
-# === 📚 Conversation History Sidebar ===
+# === 📚 Sidebar: Conversation History ===
 with st.sidebar:
     st.markdown("### 📚 Conversation History")
-    for i, msg in enumerate(st.session_state.messages[1:]):  # Skip system message
+    for i, msg in enumerate(st.session_state.messages[1:]):
         role = "🧑 You" if msg["role"] == "user" else "🤖 Resume AI"
         preview = msg["content"][:120] + ("..." if len(msg["content"]) > 120 else "")
         st.write(f"**{role}:** {preview}")
