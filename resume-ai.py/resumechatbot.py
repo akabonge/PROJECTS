@@ -4,9 +4,11 @@ import PyPDF2
 from io import StringIO
 import datetime
 from dotenv import load_dotenv
+from openai import OpenAI
+import streamlit as st
 
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.Secrets["OPENAI_API_KEY"])
+
 
 # ✅ Your fine-tuned model ID
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BEpg7auE"
