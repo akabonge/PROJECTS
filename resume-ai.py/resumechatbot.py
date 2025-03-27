@@ -43,21 +43,7 @@ if "messages" not in st.session_state:
         }
     ]
 
-
-
-
-
-
-if "conversations" not in st.session_state:
-    st.session_state.conversations = {}
-st.sidebar.title("📚 Chat History")
-conv_options = list(st.session_state.conversations.keys())
-conv_display = [f"Chat {i+1}" for i in range(len(conv_options))]
-selected = st.sidebar.radio("Select a conversation:", conv_display)
-
-selected_conv_id = conv_options[conv_display.index(selected)]
-if selected_conv_id != st.session_state.current_conv:
-    st.session_state.current_conv = selected_conv_id 
+ 
         
     
 # === Chat input ===
