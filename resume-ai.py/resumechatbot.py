@@ -47,7 +47,9 @@ if "messages" not in st.session_state:
 
 
 
-# === Sidebar: Chat History Navigation ===
+
+if "conversations" not in st.session_state:
+    st.session_state.conversations = {}
 st.sidebar.title("📚 Chat History")
 conv_options = list(st.session_state.conversations.keys())
 conv_display = [f"Chat {i+1}" for i in range(len(conv_options))]
