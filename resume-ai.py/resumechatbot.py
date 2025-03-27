@@ -8,6 +8,12 @@ import datetime
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BFOAsuRk"
 
+# === Sidebar for History ===
+st.sidebar.title("📚 Chat History")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+
 # === App config ===
 st.set_page_config(page_title="Resume AI Chatbot", page_icon="💼")
 st.title("💼 Resume & Career AI Chatbot")
