@@ -1,4 +1,4 @@
-can you do this all for me but keeping in mind the real actual code to add it to. import streamlit as st
+import streamlit as st
 from openai import OpenAI
 import PyPDF2
 from io import StringIO
