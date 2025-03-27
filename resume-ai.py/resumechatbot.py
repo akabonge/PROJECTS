@@ -43,10 +43,18 @@ if "messages" not in st.session_state:
         }
     ]
 
-# === Sidebar for History ===
-st.sidebar.title("📚 Chat History")
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+
+
+
+
+# === Sidebar Chat Summary ===
+st.sidebar.title("📚 Chat Summary")
+for msg in st.session_state.messages[1:]:  # Skip system message
+    if msg["role"] == "user":
+        st.sidebar.markdown(f"🧑‍💼 **You:** {msg['content'][:40]}...")
+    elif msg["role"] == "assistant":
+        st.sidebar.markdown(f"🤖 **AI:** {msg['content'][:40]}...")
+        
     
 # === Chat input ===
 user_input = st.chat_input("Ask a career question...")
