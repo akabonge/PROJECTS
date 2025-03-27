@@ -11,12 +11,6 @@ MODEL_ID = "ft:gpt-3.5-turbo-1106:resume-ai::BFOAsuRk"
 st.set_page_config(page_title="Resume AI Chatbot", page_icon="💼")
 st.title("💼 Resume & Career AI Chatbot")
 st.caption("Ask anything about resumes, job search, LinkedIn, or career growth.")
-
-
-# === Sidebar for History ===
-st.sidebar.title("📚 Chat History")
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
     
 # === Upload Resume ===
 if "resume_text" not in st.session_state:
@@ -49,6 +43,11 @@ if "messages" not in st.session_state:
         }
     ]
 
+# === Sidebar for History ===
+st.sidebar.title("📚 Chat History")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+    
 # === Chat input ===
 user_input = st.chat_input("Ask a career question...")
 if user_input:
