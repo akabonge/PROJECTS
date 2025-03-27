@@ -47,13 +47,15 @@ if "messages" not in st.session_state:
 
 
 
-# === Sidebar Chat Summary ===
-st.sidebar.title("📚 Chat Summary")
-for msg in st.session_state.messages[1:]:  # Skip system message
-    if msg["role"] == "user":
-        st.sidebar.markdown(f"🧑‍💼 **You:** {msg['content'][:40]}...")
-    elif msg["role"] == "assistant":
-        st.sidebar.markdown(f"🤖 **AI:** {msg['content'][:40]}...")
+# === Sidebar: Chat History Navigation ===
+st.sidebar.title("📚 Chat History")
+conv_options = list(st.session_state.conversations.keys())
+conv_display = [f"Chat {i+1}" for i in range(len(conv_options))]
+selected = st.sidebar.radio("Select a conversation:", conv_display)
+
+selected_conv_id = conv_options[conv_display.index(selected)]
+if selected_conv_id != st.session_state.current_conv:
+    st.session_state.current_conv = selected_conv_id 
         
     
 # === Chat input ===
