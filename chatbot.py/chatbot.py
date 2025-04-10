@@ -1,13 +1,13 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 from pinecone import Pinecone
 
-# === Load credentials from Streamlit secrets ===
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# === Load credentials ===
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
 index = pc.Index("fcc-chatbot-index")
 
-# === Streamlit app layout ===
+# === Streamlit layout ===
 st.set_page_config(page_title="📡 FCC Regulatory ChatBot", layout="wide")
 st.title("📡 FCC Regulatory Assistant")
 st.markdown("Ask questions about emergency alerts, public safety systems, or FCC policies.")
@@ -18,11 +18,11 @@ if query:
     with st.spinner("Thinking..."):
 
         # Step 1: Embed user query
-        embed_response = openai.Embedding.create(
+        embed_response = client.embeddings.create(
             model="text-embedding-ada-002",
-            input=query
+            input=[query]  # input must be a list
         )
-        query_vector = embed_response["data"][0]["embedding"]
+        query_vector = embed_response.data[0].embedding
 
         # Step 2: Query Pinecone
         results = index.query(
@@ -35,7 +35,7 @@ if query:
         context_chunks = [match["metadata"]["text"] for match in results["matches"]]
         full_context = "\n\n".join(context_chunks)
 
-        # Step 4: Build prompt for OpenAI
+        # Step 4: Build prompt for OpenAI Chat
         system_prompt = (
             "You are a domain-specific assistant trained solely on emergency alert systems, "
             "public safety communications, cybersecurity policy, disaster response frameworks, and FCC regulatory principles. "
@@ -51,8 +51,8 @@ if query:
 {query}
 """
 
-        # Step 5: Ask OpenAI
-        response = openai.ChatCompletion.create(
+        # Step 5: Get response
+        chat_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -62,11 +62,11 @@ if query:
         )
 
         # Step 6: Display response
-        answer = response["choices"][0]["message"]["content"]
+        answer = chat_response.choices[0].message.content
         st.markdown("### 🤖 ChatBot Response")
         st.write(answer)
 
-        # Optional: Show source context
+        # Optional: Show source chunks
         with st.expander("📄 View Retrieved Chunks"):
             for i, chunk in enumerate(context_chunks, 1):
                 st.markdown(f"**Chunk {i}**")
