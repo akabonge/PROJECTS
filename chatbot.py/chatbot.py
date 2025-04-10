@@ -12,44 +12,38 @@ st.set_page_config(page_title="📡 FCC Regulatory ChatBot", layout="wide")
 st.title("📡 FCC Regulatory Assistant")
 st.markdown("Ask questions about emergency alerts, public safety systems, or FCC policies.")
 
-# === Maintain chat history ===
+# === Chat history ===
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# === Display previous messages ===
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        st.markdown(f"👤 **You:** {message['content']}")
-    else:
-        st.markdown(f"🤖 **Bot:** {message['content']}")
-
-# === Input form to avoid reruns breaking flow ===
-with st.form(key="chat_form", clear_on_submit=True):
+# === Input form ===
+with st.form(key="chat_form"):
     query = st.text_input("💬 Enter your question:", key="user_input")
     submitted = st.form_submit_button("Send")
 
 if submitted and query:
+    # Append user's message immediately
+    st.session_state.messages.append({"role": "user", "content": query})
+
     with st.spinner("Thinking..."):
 
-        # Step 1: Embed user query
+        # Step 1: Embed query
         embed_response = client.embeddings.create(
             model="text-embedding-ada-002",
             input=[query]
         )
         query_vector = embed_response.data[0].embedding
 
-        # Step 2: Query Pinecone
+        # Step 2: Pinecone search
         results = index.query(
             vector=query_vector,
             top_k=5,
             include_metadata=True
         )
-
-        # Step 3: Prepare context
         context_chunks = [match["metadata"]["text"] for match in results["matches"]]
         full_context = "\n\n".join(context_chunks)
 
-        # Step 4: Build prompt
+        # Step 3: Prompt for OpenAI
         system_prompt = (
             "You are a domain-specific assistant trained solely on emergency alert systems, "
             "public safety communications, cybersecurity policy, disaster response frameworks, and FCC regulatory principles. "
@@ -65,7 +59,6 @@ if submitted and query:
 {query}
 """
 
-        # Step 5: Get OpenAI response
         chat_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -77,6 +70,12 @@ if submitted and query:
 
         answer = chat_response.choices[0].message.content
 
-        # Step 6: Store messages in session state
-        st.session_state.messages.append({"role": "user", "content": query})
+        # Append assistant reply
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
+# === Display chat history ===
+for message in st.session_state.messages:
+    if message["role"] == "user":
+        st.markdown(f"👤 **You:** {message['content']}")
+    else:
+        st.markdown(f"🤖 **Bot:** {message['content']}")
