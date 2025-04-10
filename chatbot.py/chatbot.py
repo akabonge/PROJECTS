@@ -79,5 +79,4 @@ if query:
         st.session_state.messages.append({"role": "user", "content": query})
         st.session_state.messages.append({"role": "assistant", "content": answer})
 
-        # Step 7: Rerun to display messages immediately
-        st.experimental_rerun()
+    
