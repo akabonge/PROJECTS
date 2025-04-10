@@ -63,7 +63,7 @@ Here are 15 content chunks retrieved from a database. Please select and return t
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an expert in emergency alertting systems and reliability. Answer clearly using only the provided source material."},
+                {"role": "system", "content": "You are an expert in emergency alerting systems and reliability. Answer clearly using only the provided source material."},
                 {"role": "user", "content": final_prompt}
             ],
             temperature=0.3
