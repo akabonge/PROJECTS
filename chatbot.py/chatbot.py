@@ -8,7 +8,7 @@ pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
 index = pc.Index("fcc-chatbot-index")
 
 # === UI ===
-st.title("📡 FCC Regulatory ChatBot with GPT Re-Ranking")
+st.title("Emergency Alerting Systems and Reliability Chatbot")
 query = st.text_input("💬 Ask a question:")
 
 if query:
