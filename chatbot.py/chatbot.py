@@ -2,48 +2,45 @@ import streamlit as st
 from openai import OpenAI
 from pinecone import Pinecone
 
-# === Setup credentials ===
+# === Setup clients ===
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
 index = pc.Index("fcc-chatbot-index")
 
-# === Streamlit layout ===
+# === Layout ===
 st.set_page_config(page_title="📡 FCC Regulatory ChatBot", layout="wide")
 st.title("📡 FCC Regulatory Assistant")
 st.markdown("Ask questions about emergency alerts, public safety systems, or FCC policies.")
 
-# === Chat history ===
+# === Session state for full chat history ===
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# === Input form ===
-with st.form(key="chat_form"):
-    query = st.text_input("💬 Enter your question:", key="user_input")
-    submitted = st.form_submit_button("Send")
+# === Chat input ===
+query = st.text_input("💬 Enter your question:")
 
-if submitted and query:
-    # Append user's message immediately
-    st.session_state.messages.append({"role": "user", "content": query})
-
+if query:
     with st.spinner("Thinking..."):
 
-        # Step 1: Embed query
+        # Step 1: Embed the query
         embed_response = client.embeddings.create(
             model="text-embedding-ada-002",
             input=[query]
         )
         query_vector = embed_response.data[0].embedding
 
-        # Step 2: Pinecone search
+        # Step 2: Query Pinecone
         results = index.query(
             vector=query_vector,
             top_k=5,
             include_metadata=True
         )
+
+        # Step 3: Extract context
         context_chunks = [match["metadata"]["text"] for match in results["matches"]]
         full_context = "\n\n".join(context_chunks)
 
-        # Step 3: Prompt for OpenAI
+        # Step 4: Build prompt
         system_prompt = (
             "You are a domain-specific assistant trained solely on emergency alert systems, "
             "public safety communications, cybersecurity policy, disaster response frameworks, and FCC regulatory principles. "
@@ -59,6 +56,7 @@ if submitted and query:
 {query}
 """
 
+        # Step 5: Get OpenAI response
         chat_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -67,13 +65,13 @@ if submitted and query:
             ],
             temperature=0.3
         )
-
         answer = chat_response.choices[0].message.content
 
-        # Append assistant reply
+        # Step 6: Save both user and bot messages
+        st.session_state.messages.append({"role": "user", "content": query})
         st.session_state.messages.append({"role": "assistant", "content": answer})
 
-# === Display chat history ===
+# === Display full chat history ===
 for message in st.session_state.messages:
     if message["role"] == "user":
         st.markdown(f"👤 **You:** {message['content']}")
