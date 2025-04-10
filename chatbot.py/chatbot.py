@@ -2,78 +2,75 @@ import streamlit as st
 from openai import OpenAI
 from pinecone import Pinecone
 
-# === Setup clients ===
+# === Load secrets ===
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
 index = pc.Index("fcc-chatbot-index")
 
-# === Layout ===
-st.set_page_config(page_title="📡 FCC Regulatory ChatBot", layout="wide")
-st.title("📡 FCC Regulatory Assistant")
-st.markdown("Ask questions about emergency alerts, public safety systems, or FCC policies.")
-
-# === Session state for full chat history ===
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# === Chat input ===
-query = st.text_input("💬 Enter your question:")
+# === UI ===
+st.title("📡 FCC Regulatory ChatBot with GPT Re-Ranking")
+query = st.text_input("💬 Ask a question:")
 
 if query:
-    with st.spinner("Thinking..."):
+    with st.spinner("🔍 Searching Pinecone..."):
 
-        # Step 1: Embed the query
+        # Step 1: Embed query
         embed_response = client.embeddings.create(
             model="text-embedding-ada-002",
             input=[query]
         )
         query_vector = embed_response.data[0].embedding
 
-        # Step 2: Query Pinecone
+        # Step 2: Search Pinecone with larger top_k
         results = index.query(
             vector=query_vector,
-            top_k=5,
+            top_k=15,  # try a larger pool to choose from
             include_metadata=True
         )
+        raw_chunks = [match["metadata"]["text"] for match in results["matches"]]
 
-        # Step 3: Extract context
-        context_chunks = [match["metadata"]["text"] for match in results["matches"]]
-        full_context = "\n\n".join(context_chunks)
+    with st.spinner("🧠 Re-ranking with GPT..."):
 
-        # Step 4: Build prompt
-        system_prompt = (
-            "You are a domain-specific assistant trained solely on emergency alert systems, "
-            "public safety communications, cybersecurity policy, disaster response frameworks, and FCC regulatory principles. "
-            "Answer based only on the provided source material. Do not guess or use external knowledge."
+        # Step 3: Ask GPT to rank the chunks
+        ranking_prompt = f"""You are helping with a research assistant. The user has asked a question:
+        
+"{query}"
+
+Here are 15 content chunks retrieved from a database. Please select and return the 3 most relevant ones (verbatim) based on how well they answer the question. Return only the text chunks, no explanations.
+
+--- CHUNKS ---
+{chr(10).join(f"- {chunk}" for chunk in raw_chunks)}
+"""
+
+        reranked_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": ranking_prompt}],
+            temperature=0.2
         )
+        top_chunks = reranked_response.choices[0].message.content
 
-        user_prompt = f"""Using the following source material, answer the user's question.
+    with st.spinner("💬 Generating answer..."):
+
+        final_prompt = f"""Using the following carefully selected source material, answer the user's question.
 
 ---SOURCE MATERIAL---
-{full_context}
+{top_chunks}
 
----USER QUESTION---
+---QUESTION---
 {query}
 """
 
-        # Step 5: Get OpenAI response
-        chat_response = client.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "system", "content": "You are an expert in emergency alertting systems and reliability. Answer clearly using only the provided source material."},
+                {"role": "user", "content": final_prompt}
             ],
             temperature=0.3
         )
-        answer = chat_response.choices[0].message.content
+        answer = response.choices[0].message.content
+        st.markdown("### 🤖 Response")
+        st.write(answer)
 
-        # Step 6: Save both user and bot messages
-        st.session_state.messages.append({"role": "user", "content": query})
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-
-# === Display full chat history ===
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        st.markdown(f"👤 **You:** {message['content']}")
-    else:
-        st.markdown(f"🤖 **Bot:** {message['content']}")
+        with st.expander("📄 GPT-selected chunks"):
+            st.text(top_chunks)
