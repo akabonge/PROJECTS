@@ -17,16 +17,18 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # === Display previous messages ===
-for i, message in enumerate(st.session_state.messages):
+for message in st.session_state.messages:
     if message["role"] == "user":
         st.markdown(f"👤 **You:** {message['content']}")
     else:
         st.markdown(f"🤖 **Bot:** {message['content']}")
 
-# === Input box for new question ===
-query = st.text_input("💬 Enter your question:", key="user_input")
+# === Input form to avoid reruns breaking flow ===
+with st.form(key="chat_form", clear_on_submit=True):
+    query = st.text_input("💬 Enter your question:", key="user_input")
+    submitted = st.form_submit_button("Send")
 
-if query:
+if submitted and query:
     with st.spinner("Thinking..."):
 
         # Step 1: Embed user query
@@ -75,8 +77,6 @@ if query:
 
         answer = chat_response.choices[0].message.content
 
-        # Step 6: Store and display messages
+        # Step 6: Store messages in session state
         st.session_state.messages.append({"role": "user", "content": query})
         st.session_state.messages.append({"role": "assistant", "content": answer})
-
-    
