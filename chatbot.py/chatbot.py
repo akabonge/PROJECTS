@@ -63,7 +63,7 @@ Here are 15 content chunks retrieved from a database. Please select and return t
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an expert in emergency alerting systems and reliability. Answer clearly using only the provided source material."},
+                {"role": "system", "content": "You are a domain-specific assistant trained solely on emergency alert systems, public safety communications, cybersecurity policy, disaster response frameworks, and regulatory principles as defined in the embedded dataset. You must restrict your responses only to the information contained in the embedded data and refrain from generating answers outside this scope. Do not reference general knowledge, FCC responses, or unrelated domains (e.g., cooking, entertainment, etc.). Where relevant, relate insights strictly to ideas present in the embedded documents or clearly supported by them."},
                 {"role": "user", "content": final_prompt}
             ],
             temperature=0.3
